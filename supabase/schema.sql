@@ -1,0 +1,4 @@
+-- المخطط المستخدم حاليًا في مشروع Supabase الموجود.
+-- لا تستخدم schema القديم الذي ينشئ جداول income/expenses/work_orders من الصفر.
+-- شغّل الملف: current_project_setup.sql
+-- بعد تفعيل Anonymous Sign-Ins وضبط رمز الدخول يدويًا.

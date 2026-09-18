@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#030b1f">
+  <title>برنامج المحاسبة للمطابع</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dashboard-page">
+  <div id="app-shell">
+    <aside id="sidebar" class="sidebar">
+      <div class="brand-block">
+        <div class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img">
+            <path d="M32 5 55 17v22L32 52 9 39V17L32 5Z" fill="none" stroke="currentColor" stroke-width="3"/>
+            <path d="m17 25 15 8 15-8M17 32l15 8 15-8M17 39l15 8 15-8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <path d="M32 5v28" stroke="currentColor" stroke-width="3" opacity=".65"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">برنامج المحاسبة للمطابع</div>
+          <div class="brand-slogan">إدارة أسهل .. أرباح أكبر</div>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="القائمة الرئيسية">
+        <ul>
+          <li><a href="index.html" class="active"><span class="nav-icon">⌂</span><span>الرئيسية</span></a></li>
+          <li><a href="pages/income.html"><span class="nav-icon">▣</span><span>الوارد</span></a></li>
+          <li><a href="pages/expenses.html"><span class="nav-icon">↘</span><span>المصروف</span></a></li>
+          <li><a href="pages/work-orders.html"><span class="nav-icon">▤</span><span>طلبات العمل</span></a></li>
+          
+          <li><a href="pages/services.html"><span class="nav-icon">▱</span><span>الخدمات والأسعار</span></a></li>
+          <li><a href="pages/inventory.html"><span class="nav-icon">▥</span><span>المخزون</span></a></li>
+          <li><a href="pages/inventory-movements.html"><span class="nav-icon">⇄</span><span>حركات المخزون</span></a></li>
+          <li><a href="pages/activity-log.html"><span class="nav-icon">◌</span><span>سجل العمليات</span></a></li>
+          <li><a href="pages/reports.html"><span class="nav-icon">▥</span><span>التقارير</span></a></li><li><a href="pages/settings.html"><span class="nav-icon">⚙</span><span>الإعدادات</span></a></li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="mini-logo">▣</div>
+        <div><strong>إدارة أسهل .. أرباح أكبر</strong><small>برنامج المحاسبة للمطابع</small></div>
+      </div>
+    </aside>
+
+    <main class="main-content dashboard-neon-stage">
+      <div class="neon-thread-field" aria-hidden="true"><span class="neon-thread neon-thread-a"></span><span class="neon-thread neon-thread-b"></span><span class="neon-thread neon-thread-c"></span><span class="neon-thread neon-thread-d"></span></div>
+      <header class="topbar dashboard-topbar">
+        <button id="menu-toggle" class="menu-toggle" aria-label="فتح القائمة">☰</button>
+        <div class="date-time-card">
+          <div class="date-part"><span class="header-icon">▣</span><span id="current-date">--</span></div>
+          <div class="time-part"><span class="header-icon">◷</span><span id="current-time">--:--</span></div>
+        </div>
+        <div class="manager-card">
+          <div class="manager-avatar">●</div>
+          <div class="manager-copy"><small>مدير البرنامج</small><strong>حسين حافظ</strong><span>☎ 07726669161</span></div>
+        </div>
+        <button id="alerts-jump-btn" class="top-icon-btn" type="button" aria-label="الانتقال إلى التنبيهات الذكية">♧<i></i></button>
+        <button class="top-icon-btn" type="button" aria-label="الإعدادات" onclick="location.href='pages/settings.html'">⚙</button>
+        <span id="auth-status" class="auth-status">جارِ التحقق...</span>
+        <button id="logout-btn" class="logout-btn" type="button" style="display:none">خروج</button>
+      </header>
+
+      <section id="login-box" class="login-box neon-panel" style="display:none;">
+        <div class="login-brand-icon">▣</div>
+        <h2>برنامج المحاسبة للمطابع</h2>
+        <p>إدارة أسهل .. أرباح أكبر</p>
+        <label for="login-code">الرمز السري</label>
+        <input type="password" id="login-code" placeholder="أدخل الرمز السري" autocomplete="off">
+        <button id="login-btn" type="button">دخول</button>
+        <p id="login-error" class="error-text"></p>
+      </section>
+
+      <div id="dashboard-content" style="display:none;">
+        <section id="dashboard-summary" class="summary-grid" aria-label="ملخص الحسابات">
+          <article class="metric-card blue">
+            <div class="metric-icon">▢</div><div class="metric-content"><span>إجمالي المبيعات</span><strong id="total-income">--</strong><small id="income-change">من الفترة الماضية</small></div>
+          </article>
+          <article class="metric-card purple">
+            <div class="metric-icon">▤</div><div class="metric-content"><span>إجمالي الفواتير</span><strong id="total-invoices">--</strong><small id="invoice-note">فاتورة مستحقة</small></div>
+          </article>
+          <article class="metric-card cyan">
+            <div class="metric-icon">▱</div><div class="metric-content"><span>إجمالي التكاليف</span><strong id="total-expenses">--</strong><small id="expense-change">من الفترة الماضية</small></div>
+          </article>
+          <article class="metric-card orange">
+            <div class="metric-icon">↗</div><div class="metric-content"><span>صافي الأرباح</span><strong id="net-profit">--</strong><small id="profit-change">من الفترة الماضية</small></div>
+          </article>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="panel chart-panel line-panel">
+            <div class="panel-heading"><div><h2>اتجاه المبيعات والأرباح</h2><p>آخر 6 أشهر</p></div><select id="chart-period" aria-label="الفترة"><option value="6">شهري</option></select></div>
+            <div class="chart-legend"><span class="legend-sales"><i></i>المبيعات</span><span class="legend-profit"><i></i>الأرباح</span></div>
+            <div class="line-chart-wrap"><svg id="sales-chart" viewBox="0 0 760 310" preserveAspectRatio="none" aria-label="مخطط المبيعات والأرباح"></svg></div>
+          </article>
+
+          <article class="panel distribution-panel">
+            <div class="panel-heading"><div><h2>توزيع المبيعات</h2><p>حسب نوع الخدمة</p></div></div>
+            <div class="distribution-body"><div id="donut-chart" class="donut-chart"><div><strong id="donut-total">0</strong><span>د.ع</span></div></div><div id="distribution-legend" class="distribution-legend"></div></div>
+          </article>
+
+          <aside class="right-column">
+            <article class="panel alerts-panel"><div class="panel-heading compact"><h2>تنبيهات ذكية</h2></div><div id="smart-alerts"></div></article>
+            <article class="panel quick-panel"><div class="panel-heading compact"><h2>نظرة سريعة</h2></div><div id="quick-stats"></div></article>
+            <article class="panel quality-panel"><div class="panel-heading compact"><h2>جودة الإنتاج</h2></div><div class="quality-row"><div class="quality-ring"><span id="quality-value">98.6%</span></div><svg id="quality-sparkline" viewBox="0 0 220 70" preserveAspectRatio="none"><polyline points="0,58 22,54 42,57 62,45 82,50 102,38 122,43 142,26 162,33 182,17 202,25 220,8" fill="none" stroke="currentColor" stroke-width="3"/></svg></div></article>
+          </aside>
+
+          <article class="panel orders-panel">
+            <div class="panel-heading"><div><h2>أوامر الطباعة وحالات الإنتاج</h2><p>آخر طلبات العمل</p></div><a class="panel-link" href="pages/work-orders.html">عرض الكل</a></div>
+            <div class="table-wrap dashboard-table"><table><thead><tr><th>رقم الطلب</th><th>اسم العميل</th><th>نوع المطبوع</th><th>الكمية</th><th>تاريخ التسليم</th><th>الحالة</th><th>التقدم</th></tr></thead><tbody id="orders-table-body"></tbody></table></div>
+          </article>
+        </section>
+        <footer class="dashboard-footer">© <span id="footer-year">2026</span> برنامج المحاسبة للمطابع - جميع الحقوق محفوظة</footer>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
