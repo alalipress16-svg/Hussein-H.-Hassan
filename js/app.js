@@ -113,14 +113,23 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // لا نعيد تحميل الصفحة؛ نتحقق من الجلسة ونُظهر لوحة التحكم مباشرة.
-      const session = await checkAuth();
+     // لا نعيد تحميل الصفحة؛ نفتح لوحة التحكم ونحمّل بياناتها مباشرة.
+const session = await checkAuth();
 
-      if (!session) {
-        if (errorEl) {
-          errorEl.textContent = "تم قبول الرمز لكن تعذر فتح لوحة التحكم. أعد المحاولة.";
-        }
-      }
+if (session) {
+  // عند الدخول من دون إعادة تحميل الصفحة يكون مستمع dashboard.js
+  // قد انتهى بالفعل قبل نجاح التحقق؛ لذلك نفتح المحتوى ونحمّل البيانات هنا.
+  if (typeof showDashboard === "function") showDashboard();
+  if (typeof updateClock === "function") updateClock();
+
+  if (typeof loadDashboardSummary === "function") {
+    await loadDashboardSummary();
+  }
+} else {
+  if (errorEl) {
+    errorEl.textContent = "تم قبول الرمز لكن تعذر فتح لوحة التحكم. أعد المحاولة.";
+  }
+}
     } catch (error) {
       if (errorEl) {
         errorEl.textContent = "حدث خطأ غير متوقع أثناء تسجيل الدخول.";
