@@ -22,7 +22,109 @@ function updateRemaining(){const total=Math.max(0,parseNumberOrNull(document.get
 async function saveWorkOrder(e){e.preventDefault();const form=e.currentTarget;clearFormError(form);const customer_name=parseTextOrNull(document.getElementById('f-customer_name').value);const customer_phone=parseTextOrNull(document.getElementById('f-customer_phone').value);const total_amount=parseNumberOrNull(document.getElementById('f-total_amount').value);const deposit=Math.max(0,parseNumberOrNull(document.getElementById('f-deposit').value)||0);const items=collectWorkItems();if(!customer_name)return showFormError(form,'أدخل اسم الزبون');if(total_amount===null||Number.isNaN(total_amount)||total_amount<0)return showFormError(form,'أدخل المبلغ الكلي بشكل صحيح');if(deposit>total_amount)return showFormError(form,'العربون لا يمكن أن يتجاوز المبلغ الكلي');if(!items.length)return showFormError(form,'أضف نوع عمل واحدًا على الأقل');for(let i=0;i<items.length;i++){const x=items[i];if(!x.work_type)return showFormError(form,`أدخل اسم/نوع العمل في النوع ${i+1}`);if(x.quantity===null||Number.isNaN(x.quantity)||x.quantity<=0)return showFormError(form,`أدخل الكمية بشكل صحيح في النوع ${i+1}`);if(x.copies!==null&&(Number.isNaN(x.copies)||x.copies<=0))return showFormError(form,`عدد النسخ يجب أن يكون رقمًا موجبًا في النوع ${i+1}`)}const first=items[0];const remaining_amount=Math.max(0,total_amount-deposit);const status_id=workOrderStatuses.find(x=>/جديد/i.test(x.name))?.id||workOrderStatuses[0]?.id||null;const record={order_date:todayISO(),customer_name,customer_phone,paper_size_id:first.paper_size_id||null,print_type_id:first.print_type_id||null,quantity:first.quantity||0,unit_retail_price:total_amount,unit_wholesale_price:0,chosen_unit_price:total_amount,gross_total:total_amount,discount:0,net_total:total_amount,paid_amount:deposit,remaining_amount,status_id,payment_status:deposit<=0?'unpaid':deposit<total_amount?'partial':'paid',notes:orderNotes(items)};const {error}=await supabaseClient.from('work_orders').insert(record);if(error)return showFormError(form,'تعذّر حفظ الطلب: '+error.message);await logActivity('insert','work_orders',null,record);form.reset();document.getElementById('work-items').innerHTML='';workItemSeq=0;addWorkItem();updateRemaining();await loadWorkOrders()}
 function getStatusClass(name){if(/تسليم|جاهز|مكتمل/i.test(name||''))return'status-ready';if(/طباع|قيد/i.test(name||''))return'status-print';if(/تصميم/i.test(name||''))return'status-design';return'status-new'}
 function statusOptions(selected){return workOrderStatuses.map(s=>`<option value="${escapeHtml(s.id)}" ${String(s.id)===String(selected)?'selected':''}>${escapeHtml(s.name)}</option>`).join('')}
-async function changeOrderStatus(id,statusId){if(!statusId)return;const {error}=await supabaseClient.from('work_orders').update({status_id:statusId,updated_at:new Date().toISOString()}).eq('id',id);if(error){alert('تعذّر تحديث حالة الطلب: '+error.message);return}await logActivity('update','work_orders',id,{status_id:statusId});await loadWorkOrders()}
+async function changeOrderStatus(id,statusId){
+  if(!statusId)return;
+
+  const selectedStatus=workOrderStatuses.find(x=>String(x.id)===String(statusId));
+  const isDelivered=selectedStatus&&/تم التسليم|تسليم/i.test(selectedStatus.name||'');
+
+  if(isDelivered){
+    const order=window.__workOrdersCache?.find(x=>String(x.id)===String(id));
+
+    if(!order){
+      alert('تعذّر العثور على بيانات الطلب.');
+      return;
+    }
+
+    const total=Math.max(0,Number(order.net_total)||0);
+    const paid=Math.max(0,Number(order.paid_amount)||0);
+    const remaining=Math.max(0,total-paid);
+
+    const amountInput=prompt(
+      `طلب #${order.order_no}\n`+
+      `الزبون: ${order.customer_name||'-'}\n`+
+      `المبلغ الكلي: ${formatMoney(total)}\n`+
+      `المبلغ المستلم سابقاً: ${formatMoney(paid)}\n`+
+      `المبلغ المتبقي: ${formatMoney(remaining)}\n\n`+
+      `أدخل المبلغ المستلم عند التسليم.\n`+
+      `إذا كان المبلغ واصل كاملاً أدخل: ${remaining}`
+    );
+
+    if(amountInput===null)return;
+
+    const received=Number(String(amountInput).replace(/,/g,'').trim());
+
+    if(!Number.isFinite(received)||received<0||received>remaining){
+      alert('المبلغ المستلم غير صحيح. يجب أن يكون بين 0 والمبلغ المتبقي.');
+      return;
+    }
+
+    const fullPayment=Math.abs(received-remaining)<0.01;
+
+    const {data,error}=await supabaseClient.rpc(
+      'record_work_order_delivery_payment',
+      {
+        p_work_order_id:id,
+        p_amount:received,
+        p_full_payment:fullPayment
+      }
+    );
+
+    if(error){
+      alert('تعذّر تسجيل مبلغ التسليم: '+error.message);
+      return;
+    }
+
+    await logActivity(
+      'update',
+      'work_orders',
+      id,
+      {
+        status_id:statusId,
+        delivery_amount_received:received,
+        delivery_payment_full:fullPayment
+      }
+    );
+
+    const newRemaining=Math.max(
+      0,
+      Number(data?.remaining_amount)||
+      (remaining-received)
+    );
+
+    if(newRemaining>0){
+      alert(
+        `تم تسليم الطلب وتسجيل المبلغ المستلم في الوارد.\n\n`+
+        `المبلغ المستلم: ${formatMoney(received)}\n`+
+        `المبلغ المتبقي على الزبون: ${formatMoney(newRemaining)}`
+      );
+    }else{
+      alert(
+        `تم تسليم الطلب وتسجيل المبلغ كاملاً في الوارد.\n\n`+
+        `المبلغ المستلم: ${formatMoney(received)}`
+      );
+    }
+
+    await loadWorkOrders();
+    return;
+  }
+
+  const {error}=await supabaseClient
+    .from('work_orders')
+    .update({
+      status_id:statusId,
+      updated_at:new Date().toISOString()
+    })
+    .eq('id',id);
+
+  if(error){
+    alert('تعذّر تحديث حالة الطلب: '+error.message);
+    return;
+  }
+
+  await logActivity('update','work_orders',id,{status_id:statusId});
+  await loadWorkOrders();
+}
 function itemLabel(item){const type=item.work_type||'عمل';const qty=item.quantity?` × ${item.quantity}`:'';const serial=item.serial_start||item.serial_end?` (${item.serial_start||'—'} - ${item.serial_end||'—'})`:'';return `${type}${qty}${serial}`}
 function printOrder(row){const items=parseOrderItems(row);const remaining=Math.max(0,Number(row.net_total||0)-Number(row.paid_amount||0));const rows=items.map((x,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(x.work_type||'—')}</td><td>${escapeHtml(paperSizes.find(p=>String(p.id)===String(x.paper_size_id))?.name||row.paper_sizes?.name||'—')}</td><td>${escapeHtml(x.quantity??'—')}</td><td>${escapeHtml(x.copies??'—')}</td><td>${escapeHtml(printTypes.find(p=>String(p.id)===String(x.print_type_id))?.name||row.print_types?.name||'—')}</td><td>${escapeHtml(x.serial_start||'—')}</td><td>${escapeHtml(x.serial_end||'—')}</td></tr>`).join('');const html=`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>إيصال طلب العمل #${escapeHtml(row.order_no)}</title><style>body{font-family:Arial,sans-serif;padding:25px;color:#111}h1{text-align:center}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #bbb;padding:8px;text-align:right}th{background:#eee}.total{font-weight:bold;font-size:18px}@media print{body{padding:10mm}}</style></head><body><h1>برنامج المحاسبة للمطابع</h1><p style="text-align:center">إدارة أسهل .. أرباح أكبر</p><hr><p><b>رقم الطلب:</b> #${escapeHtml(row.order_no)}</p><p><b>الزبون:</b> ${escapeHtml(row.customer_name)} &nbsp; <b>الهاتف:</b> ${escapeHtml(row.customer_phone||'—')}</p><table><thead><tr><th>#</th><th>نوع العمل</th><th>القياس</th><th>الكمية</th><th>النسخ</th><th>الطباعة</th><th>من</th><th>إلى</th></tr></thead><tbody>${rows}</tbody></table><p>المبلغ الكلي: <b>${formatMoney(row.net_total)}</b></p><p>العربون: <b>${formatMoney(row.paid_amount)}</b></p><p class="total">المتبقي: ${formatMoney(remaining)}</p><script>window.print();</script></body></html>`;const w=window.open('','_blank','width=900,height=900');if(!w){alert('يرجى السماح بالنوافذ المنبثقة للطباعة.');return}w.document.write(html);w.document.close()}
 async function loadWorkOrders(){
@@ -32,6 +134,7 @@ async function loadWorkOrders(){
   tbody.innerHTML='';
   if(error){tbody.appendChild(buildSafeRow(['تعذّر تحميل الطلبات: '+error.message]));return}
   const all=data||[];
+window.__workOrdersCache=all;
   const rows=search?all.filter(r=>String(r.customer_name||'').toLowerCase().includes(search)||String(r.customer_phone||'').toLowerCase().includes(search)):all;
   renderCustomerHistory(search,all);
   rows.forEach(row=>{
