@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>العملاء</title>
+<link rel="stylesheet" href="../css/style.css?v=2026092801">
+</head>
+<body>
+<div id="app-shell">
+  <aside id="sidebar" class="sidebar">
+      <div class="brand-block">
+        <div class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img">
+            <path d="M32 5 55 17v22L32 52 9 39V17L32 5Z" fill="none" stroke="currentColor" stroke-width="3"/>
+            <path d="m17 25 15 8 15-8M17 32l15 8 15-8M17 39l15 8 15-8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <path d="M32 5v28" stroke="currentColor" stroke-width="3" opacity=".65"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">برنامج المحاسبة للمطابع</div>
+          <div class="brand-slogan">إدارة أسهل .. أرباح أكبر</div>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="القائمة الرئيسية">
+        <ul>
+          <li><a href="../index.html" ><span class="nav-icon">⌂</span><span>الرئيسية</span></a></li>
+          <li><a href="income.html"><span class="nav-icon">▣</span><span>الوارد</span></a></li>
+          <li><a href="expenses.html"><span class="nav-icon">↘</span><span>المصروف</span></a></li>
+          <li><a href="work-orders.html"><span class="nav-icon">▤</span><span>طلبات العمل</span></a></li><li><a href="customers.html" class="active"><span class="nav-icon">♙</span><span>العملاء</span></a></li>
+          
+          <li><a href="services.html"><span class="nav-icon">▱</span><span>الخدمات والأسعار</span></a></li>
+          <li><a href="inventory.html"><span class="nav-icon">▥</span><span>المخزون</span></a></li>
+          <li><a href="inventory-movements.html"><span class="nav-icon">⇄</span><span>حركات المخزون</span></a></li>
+          <li><a href="activity-log.html"><span class="nav-icon">◌</span><span>سجل العمليات</span></a></li>
+          <li><a href="reports.html"><span class="nav-icon">▥</span><span>التقارير</span></a></li><li><a href="settings.html"><span class="nav-icon">⚙</span><span>الإعدادات</span></a></li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="mini-logo">▣</div>
+        <div><strong>إدارة أسهل .. أرباح أكبر</strong><small>برنامج المحاسبة للمطابع</small></div>
+      </div>
+    </aside>
+
+  <main class="main-content">
+    <header class="topbar"></header>
+    <section class="login-box" id="login-box" style="display:none;"><p>الرجاء تسجيل الدخول من الصفحة الرئيسية أولًا.</p><a href="../index.html">الذهاب لتسجيل الدخول</a></section>
+
+    <section id="customers-section">
+      <div class="page-intro">
+        <div><h1>العملاء</h1><p>سجل العملاء وطلبات العمل والمبالغ المستحقة</p></div>
+        <div class="customer-search-wrap"><input type="search" id="customers-search" placeholder="بحث باسم العميل أو رقم الهاتف"></div>
+      </div>
+
+      <div id="customer-alert" class="customer-history" hidden></div>
+
+      <div class="table-wrap">
+        <table class="work-orders-table">
+          <thead><tr><th>العميل</th><th>الهاتف</th><th>عدد الطلبات</th><th>إجمالي الطلبات</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody id="customers-table-body"></tbody>
+        </table>
+      </div>
+
+      <div id="customer-profile" class="customer-history" hidden></div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabaseClient.js"></script>
+<script src="../js/app.js"></script>
+<script src="../components/page-header.js"></script>
+<script src="../js/customers.js"></script>
+</body>
+</html>

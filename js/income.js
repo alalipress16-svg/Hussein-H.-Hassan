@@ -38,10 +38,44 @@ async function loadIncome() {
   const { data, error } = await supabaseClient.from("income").select("*, income_types(name)").order("income_date", { ascending: false });
   const tbody = document.getElementById("income-table-body"); tbody.innerHTML = "";
   if (error) return tbody.appendChild(buildSafeRow(["تعذّر تحميل البيانات: " + error.message]));
-  (data || []).forEach(row => {
-    const actions = `<button data-id="${row.id}" class="delete-income-btn">حذف</button>`;
-    tbody.appendChild(buildSafeRow([row.income_date, formatMoney(row.amount), row.income_types?.name || "", row.received_from], actions));
+
+  const rows = data || [];
+  const orderIds = [...new Set(rows.map(row => row.work_order_id).filter(Boolean))];
+  let ordersById = {};
+  let collectedByOrder = {};
+
+  if (orderIds.length) {
+    const { data: orders } = await supabaseClient.from("work_orders").select("id,order_no,customer_name,net_total").in("id", orderIds);
+    (orders || []).forEach(order => { ordersById[String(order.id)] = order; });
+
+    const { data: payments } = await supabaseClient.from("work_order_payments").select("work_order_id,amount").in("work_order_id", orderIds);
+    (payments || []).forEach(payment => {
+      const key = String(payment.work_order_id);
+      collectedByOrder[key] = (collectedByOrder[key] || 0) + (Number(payment.amount) || 0);
+    });
+  }
+
+  rows.forEach(row => {
+    const order = row.work_order_id ? ordersById[String(row.work_order_id)] : null;
+    let orderDetails = "—";
+    if (order) {
+      const total = Number(order.net_total) || 0;
+      const collected = Number(collectedByOrder[String(order.id)] || 0);
+      const remaining = Math.max(0, total - collected);
+      orderDetails =
+        "طلب #" + String(order.order_no ?? "") +
+        " | " + (order.customer_name || "غير محدد") +
+        " | إجمالي الطلب: " + formatMoney(total) +
+        " | المحصل حتى الآن: " + formatMoney(collected) +
+        " | المتبقي: " + formatMoney(remaining);
+    }
+    const actions = '<button data-id="' + row.id + '" class="delete-income-btn">حذف</button>';
+    tbody.appendChild(buildSafeRow(
+      [row.income_date, formatMoney(row.amount), row.income_types?.name || "", row.received_from, orderDetails],
+      actions
+    ));
   });
+
   tbody.querySelectorAll(".delete-income-btn").forEach(btn => btn.addEventListener("click", async () => {
     if (!confirm("تأكيد حذف الوارد؟")) return;
     const id = btn.dataset.id;
